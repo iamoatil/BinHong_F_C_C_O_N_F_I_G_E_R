@@ -1,0 +1,34 @@
+#### 在FC_ConfigerDlg.cpp的OnTimer函数中添加了如下逻辑
+m_ComPort.ReceiveData(RcvBuff + m_RcvIndex,(DWORD*)&m_RcvIndex);
+		
+		writeLen = m_ComPort.GetWriteSize();
+		if (writeLen == 11)
+		{
+			if (m_RcvIndex < 3)
+			{
+				recvCount = m_RcvIndex;
+				m_RcvIndex = 0;
+				Sleep(1);
+				m_ComPort.ReceiveData(RcvBuff + recvCount, (DWORD*)&m_RcvIndex);
+				m_RcvIndex += recvCount;
+			}
+		}
+		else if (writeLen == 7)
+		{
+			if (m_RcvIndex < 7)
+			{
+				recvCount = m_RcvIndex;
+				m_RcvIndex = 0;
+				Sleep(1);
+				m_ComPort.ReceiveData(RcvBuff + recvCount, (DWORD*)&m_RcvIndex);
+				m_RcvIndex += recvCount;
+			}
+		}
+
+#### 在SerialPort.cpp中添加了GetWriteSize()方法
+	int CSerialPort::GetWriteSize()
+{
+	return m_nWriteSize;
+}
+
+####替换了res/splash.bmp文件

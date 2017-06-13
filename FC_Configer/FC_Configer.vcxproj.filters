@@ -31,13 +31,13 @@
     <None Include="res\Port_32px_530255_easyicon.net.ico">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="res\splash.bmp">
-      <Filter>资源文件</Filter>
-    </None>
     <None Include="resource.hm">
       <Filter>头文件</Filter>
     </None>
     <None Include="res\favicon.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\splash2.bmp">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
@@ -136,5 +136,10 @@
     <ResourceCompile Include="FC_Configer.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\splash.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
