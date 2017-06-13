@@ -169,4 +169,9 @@ public:
 	BOOL m_bUniBroad;
 	DWORD m_nIP_Input;
 	afx_msg void OnDeltaposSpin1(NMHDR *pNMHDR, LRESULT *pResult);
+
+	private:
+		int FindItemById(BYTE id);
+		BYTE UpdateEthAndCanValue(int row, byte ethCanPortValue);
+		BYTE StringToEthAndCanValue(CString ethStr, CString canStr);
 };

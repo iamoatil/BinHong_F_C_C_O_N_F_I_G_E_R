@@ -225,25 +225,132 @@ void CFC_ConfigerDlg::MapDataToGridView(CFCGrid* pGrid)
 	}
 }
 
+//在界面列表中寻找FC/CAN的DID为指定值id的条目,找到就返回其index，若没有就返回-1
+int CFC_ConfigerDlg::FindItemById(BYTE id)
+{
+	CFCGrid*pGrid = &m_UGGridDID_Eth;	
+	int count = pGrid->GetItemCount();
+
+	CString findStr = "";
+	findStr.Format(_T("%d"), id);
+	for (int i = 0; i < count; i++)
+	{
+		CString itemId=pGrid->GetItemText(i,1);
+		
+		if (itemId == findStr)
+		{
+			return i;
+		}
+	}	
+
+	return -1;
+}
+BYTE  CFC_ConfigerDlg::UpdateEthAndCanValue(int row, BYTE m_nEthPortSel)
+{
+	CFCGrid*pGrid = &m_UGGridDID_Eth;
+	
+	CString ethStr = pGrid->GetItemText(row, 2);
+	CString canStr = pGrid->GetItemText(row, 3);
+	BYTE curEthAndCanValue=StringToEthAndCanValue(ethStr, canStr);
+	BYTE newHeader4 = m_nEthPortSel & 0xF0;
+	BYTE newTail4 = m_nEthPortSel & 0x0F;
+	if (newHeader4 != 0)
+	{
+		BYTE curTail4 = curEthAndCanValue & 0x0F;
+		curEthAndCanValue = newHeader4 | curTail4;
+	}
+	if (newTail4 != 0)
+	{
+		BYTE curHeader4 = curEthAndCanValue & 0xF0;
+		curEthAndCanValue = curHeader4 | newTail4;
+	}
+
+	ethStr = EthPortToString(curEthAndCanValue & 0x0f);
+	canStr = EthPortToString((curEthAndCanValue >> 4) & 0x0f);
+	pGrid->SetItemText(row, 2, ethStr);
+	pGrid->SetItemText(row, 3, canStr);
+
+	return curEthAndCanValue;
+}
+
+BYTE CFC_ConfigerDlg::StringToEthAndCanValue(CString ethStr, CString canStr)
+{
+	//网口
+	CString strItem = ethStr;
+	strItem.Replace(_T("，"), _T(","));
+	CString resToken;
+	int curPos = 0;
+
+	resToken = strItem.Tokenize(_T(", "), curPos);
+	BYTE port = 0;
+	while (resToken != _T(""))
+	{
+		BYTE port_num = _ttoi(resToken);
+		if ((port_num == 0) || (port_num>4))
+		{
+			CString err;
+			err.Format(_T("端口号%s错误!"), strItem);
+			MessageBox(err, _T("光纤到以太网转发表错误"), MB_OK | MB_ICONWARNING);
+		}
+		port += (0x01 << (port_num - 1));
+		resToken = strItem.Tokenize(_T(", "), curPos);
+	};
+
+	//CAN
+	strItem = canStr;
+	strItem.Replace(_T("，"), _T(","));
+	curPos = 0;
+
+	resToken = strItem.Tokenize(_T(", "), curPos);
+	BYTE portB = 0;
+	while (resToken != _T(""))
+	{
+		BYTE port_num = _ttoi(resToken);
+		if ((port_num == 0) || (port_num>4))
+		{
+			CString err;
+			err.Format(_T("端口号%s错误!"), strItem);
+			MessageBox(err, _T("光纤到以太网转发表错误"), MB_OK | MB_ICONWARNING);
+		}
+		portB += (0x01 << (port_num - 1));
+		resToken = strItem.Tokenize(_T(", "), curPos);
+	};	
+	
+	port += (portB << 4);
+	return port;
+}
+
 //增加光口到以太网的转发规则
 void CFC_ConfigerDlg::OnBnClickedButtonInsertDideth()
 {
 	UpdateData(TRUE);
 	BYTE temp = 0;
-	for(int i=0;i<4;i++)
-		temp += m_bEthPort[i]*(1<<i);
-	if(0 != m_nEthCan)
+	for (int i = 0; i < 4; i++)
+		temp += m_bEthPort[i] * (1 << i);
+	if (0 != m_nEthCan)
 		temp <<= 4;
-	if( 0==temp)
+	if (0 == temp)
 	{
-		MessageBox(_T("请选择至少一个网口！"),_T("无效转发规则"),MB_OK|MB_ICONWARNING);
+		MessageBox(_T("请选择至少一个网口！"), _T("无效转发规则"), MB_OK | MB_ICONWARNING);
 		return;
 	}
 	m_nEthPortSel = temp;
-	int cur_sel = GridInsertItem(&m_UGGridDID_Eth);
-	if(cur_sel<0 )
-		return;
-	UpDateGridView(&m_UGGridDID_Eth,cur_sel);
+	int cur_sel = -1;
+	int findIndex = FindItemById(m_nDID_ETH);
+	if (findIndex == -1)
+	{
+		cur_sel = GridInsertItem(&m_UGGridDID_Eth);
+		if (cur_sel < 0)
+		{
+			return;
+		}
+	}
+	else
+	{
+		cur_sel = findIndex;
+		BYTE m_nEthPortSel = UpdateEthAndCanValue(cur_sel, temp);
+	}
+	UpDateGridView(&m_UGGridDID_Eth, cur_sel);
 	m_nDID_ETH += m_b_IP_DID_IP_AutoInc;
 	UpdateData(FALSE);
 }

@@ -338,14 +338,14 @@ BOOL CFC_ConfigerDlg::OnInitDialog()
 		m_UGGridCtrl_BroadCast.SetColumn(i, &lvc);
 //end 新增广播
 	m_UGGridDID_Eth.InsertColumn(0, _T("序号"));
-	m_UGGridDID_Eth.InsertColumn(1, _T("FC 帧DID"));
+	m_UGGridDID_Eth.InsertColumn(1, _T("FC/CAN DID"));
 	m_UGGridDID_Eth.InsertColumn(2, _T("网络端口"));
 	m_UGGridDID_Eth.InsertColumn(3, _T("CAN端口"));
-	m_UGGridDID_Eth.SetColumnWidth(0,40);
+	m_UGGridDID_Eth.SetColumnWidth(0,40);	
+	m_UGGridDID_Eth.SetColumnWidth(2,60);
+	m_UGGridDID_Eth.SetColumnWidth(3,70);
 	m_UGGridDID_Eth.GetWindowRect(&myrect);
-	m_UGGridDID_Eth.SetColumnWidth(1,80);
-	m_UGGridDID_Eth.SetColumnWidth(2,70);
-	m_UGGridDID_Eth.SetColumnWidth(3,(myrect.Width()-190));
+	m_UGGridDID_Eth.SetColumnWidth(1, (myrect.Width() - 170));
 	//m_UGGridCtrl.SetAutoEdit(TRUE);
 	m_UGGridDID_Eth.SetEditable(TRUE,1);
 	m_UGGridDID_Eth.SetEditable(TRUE,2);

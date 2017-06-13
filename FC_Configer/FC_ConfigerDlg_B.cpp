@@ -243,13 +243,13 @@ void CFC_ConfigerDlg::DID_Port_TableToArray(void)
 			portB += (0x01<<(port_num-1));
 			resToken = strItem.Tokenize(_T(", "), curPos);
 		}; 
-		if(0!=(portB*port))
+		/*if(0!=(portB*port))
 		{
 				CString err;
 				err.Format(_T("第%d行同时选择了网口和CAN!"),i+1);
 				MessageBox(err,_T("光纤到以太网转发表错误"),MB_OK|MB_ICONWARNING);
-		}
-		else if(0 ==(portB+port))
+		}else*/
+		if(0 ==(portB+port))
 		{
 				CString err;
 				err.Format(_T("第%d行没有选择端口!"),i+1);

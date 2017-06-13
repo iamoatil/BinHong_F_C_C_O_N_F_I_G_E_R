@@ -32,3 +32,6 @@ m_ComPort.ReceiveData(RcvBuff + m_RcvIndex,(DWORD*)&m_RcvIndex);
 }
 
 ####Ìæ»»ÁËres/splash.bmpÎÄ¼þ
+
+m_UGGridBroadIP_Eth
+m_strlSpinBroadIP
