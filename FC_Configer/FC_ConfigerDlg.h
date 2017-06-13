@@ -62,23 +62,24 @@ public:
 	UINT m_nPriorityEth[4];
 	BOOL m_b_IP_DID_IP_AutoInc,m_bEthPort[4];
 	UINT m_nSwitchID;
-	PC_CMD_ITEM cmd_item_list[2048],cmd_queue[2048]; 
+	PC_CMD_ITEM cmd_item_list[2560], cmd_queue[2560];
 	int cmd_item_num,cmd_item_index;
 	UINT m_nVoidV,m_nVersion,m_nCfgdone,m_nReadFlashAddr,m_nCANSpeed,m_nLinkStatus,m_nCfgReadValue;
 	CString str_msg_text;
 	BOOL bHideReplyMsg;
-	UINT Card_Flash_Table[1024+5],StatisData[32];
+	UINT Card_Flash_Table[1024+512],StatisData[32];
 	UINT nPollCounter;
 	BOOL bStopTransfer,m_bAutoReadStat;
 	CProgressCtrl m_Ctl_Prgress;
-	CFCGrid m_UGGridCtrl,m_UGGridCtrl_BroadCast,m_UGGridDID_Eth;
-	BYTE m_nIP_map,m_nDID_map,m_nEthPortSel,m_nDID_ETH;
-	CSpinButtonCtrl m_SpinEth[4],m_SpinDIDETH,m_strlSpinIPMAP,m_strlSpinDIDMAP;
+	CFCGrid m_UGGridCtrl, m_UGGridCtrl_BroadCast, m_UGGridDID_Eth;
+	BYTE m_nIP_map,m_nDID_map,m_nEthPortSel,m_nDID_ETH;	
+	CSpinButtonCtrl m_SpinEth[4], m_SpinDIDETH, m_strlSpinIPMAP, m_strlSpinDIDMAP;
 
-	CArray<CPoint,CPoint> FC_IP_DID_Map_UniCast,FC_IP_DID_Map_BroadCast,FC_DID_ETH_Map;
+	CArray<CPoint, CPoint> FC_IP_DID_Map_UniCast, FC_IP_DID_Map_BroadCast, FC_DID_ETH_Map;
 	CLED m_csLinkStatus[6];
 	int m_nRcvTimer;
 	void ShowID_EthPort_Map(void);
+	void ShowBroadIP_Port_Map(void);
 	COXGridList m_GridCanState,m_GridFCState,m_GridEthState;
 	afx_msg void ShowAboutDlg();
 	afx_msg void OnComPara();
@@ -120,9 +121,11 @@ public:
 	BOOL Verify_FC_Ethernet(void);
 	BOOL Verify_Ethernet_FC(void);
 	BOOL Verify_Ethernet_FC_Broad(void);
+	BOOL Verify_SourceID();
 	void IP_DID_TableToArray(void);
 	void IP_DID_TableToArray_Broad(void);
 	void DID_Port_TableToArray(void);
+	
 	int Read_IP_DID_Map(LPARAM lp);
 	int UpDateGridView(CFCGrid* pGrid,int cursel);
 	int GridInsertItem(CFCGrid* pGrid);
@@ -168,10 +171,28 @@ public:
 
 	BOOL m_bUniBroad;
 	DWORD m_nIP_Input;
+
 	afx_msg void OnDeltaposSpin1(NMHDR *pNMHDR, LRESULT *pResult);
 
 	private:
 		int FindItemById(BYTE id);
 		BYTE UpdateEthAndCanValue(int row, byte ethCanPortValue);
 		BYTE StringToEthAndCanValue(CString ethStr, CString canStr);
+public:
+	afx_msg void OnBroadIPChanged(NMHDR *pNMHDR, LRESULT *pResult);
+
+	//BroadIPPort
+	CSpinButtonCtrl m_Spin_BroadIPPort;
+	CArray<CPoint, CPoint> m_Map_BroadIPPort;
+	CFCGrid m_Grid_BroadIPPort;
+	DWORD m_BroadIP;
+	BOOL Verify_BroadIPPort(void);
+	void TableToArray_BroadIPPort(void);	
+
+	//SourceID
+	int m_SourceID;
+	CString m_SourceIDStr;
+	void OnBnClickedBtnWrSourceID();
+	int PackageSourceID(BOOL bReadWrite, int start_index);
+	void OnBnClickedBtnRdSourceID();
 };

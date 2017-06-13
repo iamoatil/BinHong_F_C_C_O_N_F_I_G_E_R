@@ -10,7 +10,6 @@
 #define new DEBUG_NEW
 #endif
 
-
 // CFC_ConfigerApp
 
 BEGIN_MESSAGE_MAP(CFC_ConfigerApp, CWinApp)
@@ -76,8 +75,9 @@ BOOL CFC_ConfigerApp::InitInstance()
 	// 例如修改为公司或组织名
 	SetRegistryKey(_T("应用程序向导生成的本地应用程序"));
 
+	
 	CFC_ConfigerDlg dlg;
-	m_pMainWnd = &dlg;
+	m_pMainWnd = &dlg;	
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{

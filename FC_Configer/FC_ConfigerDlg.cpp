@@ -11,6 +11,9 @@
 #include "DataFrame.h"
 #include "OxGridList.h"
 #include "OXGridEdit.h"
+#include <iostream>
+using namespace std;
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -70,7 +73,10 @@ CFC_ConfigerDlg::CFC_ConfigerDlg(CWnd* pParent /*=NULL*/)
 	, m_nFlashWriteValue(0)
 	, m_bUniBroad(FALSE)
 	, m_nIP_Input(0)
-{
+	, m_BroadIP(0)
+	, m_SourceID(1)
+	, m_SourceIDStr("0x1")
+{	
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_RcvIndex = 0;
 	for(int i=0;i<4;i++)
@@ -93,11 +99,14 @@ CFC_ConfigerDlg::CFC_ConfigerDlg(CWnd* pParent /*=NULL*/)
 	m_strTestFlashWrite = _T("0x20");
 	m_bUniBroad = FALSE;
 	m_nIP_Input = ((192L*256L+168L)*256L+1)*256L+1;
+	m_BroadIP = ((192L * 256L + 168L) * 256L + 1) * 256L + 1;
 }
 
 void CFC_ConfigerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_EDIT_SourceID, m_SourceIDStr);
+
 	DDX_Control(pDX, IDC_STATIC_LOGO, m_Ctl_Logo);
 	DDX_Control(pDX, IDC_RICHEDIT21, m_MessageShow);
 	DDX_CBIndex(pDX, IDC_COMBO1, m_CAN_SPD[0]);
@@ -108,6 +117,8 @@ void CFC_ConfigerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT5, m_nDID_map);
 	DDX_Control(pDX, IDC_SPIN1, m_strlSpinIPMAP);
 	DDX_Control(pDX, IDC_SPIN2, m_strlSpinDIDMAP);
+	DDX_Control(pDX, IDC_SPIN_BroadIPInc, m_Spin_BroadIPPort);
+	
 	DDV_MinMaxByte(pDX, m_nDID_map, 0, 255);
 	DDX_Text(pDX, IDC_EDIT7, m_nPriorityEth[0]);
 	DDV_MinMaxByte(pDX, m_nPriorityEth[0], 0, 255);
@@ -143,7 +154,7 @@ void CFC_ConfigerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_LK4, m_csLinkStatus[4]);
 	DDX_Control(pDX, IDC_STATIC_LK5, m_csLinkStatus[5]);
 	DDX_Radio(pDX, IDC_RADIO1, m_nEthCan);
-	DDV_MinMaxInt(pDX, m_nEthCan, 0, 1);
+	DDV_MinMaxInt(pDX, m_nEthCan, 0, 2);
 	DDX_Text(pDX, IDC_EDIT_CAN_SD_DID, m_nCAN_Send_DID[0]);
 	DDV_MinMaxByte(pDX, m_nCAN_Send_DID[0], 0, 255);
 	DDX_Text(pDX, IDC_EDIT_CAN_SD_DID2, m_nCAN_Send_DID[1]);
@@ -164,8 +175,10 @@ void CFC_ConfigerDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_TST_ADD3, m_strTestFlashWrite);
 
 	DDX_Control(pDX, IDC_LIST_IPMAP6, m_UGGridCtrl_BroadCast);
+	DDX_Control(pDX, IDC_LIST_IPMAP7, m_Grid_BroadIPPort);
 	DDX_Radio(pDX, IDC_RADIO_Uni, m_bUniBroad);
 	DDX_IPAddress(pDX, IDC_IPADDRESS1, m_nIP_Input);
+	DDX_IPAddress(pDX, IDC_IPADDRESS_Broad, m_BroadIP);
 }
 
 BEGIN_MESSAGE_MAP(CFC_ConfigerDlg, CDialogEx)
@@ -181,7 +194,7 @@ BEGIN_MESSAGE_MAP(CFC_ConfigerDlg, CDialogEx)
 	ON_COMMAND(ID_MENU_RESET, &CFC_ConfigerDlg::OnBnClickedResetDevice)
 
 	ON_COMMAND(ID_MENU_SAVE_FILE, &CFC_ConfigerDlg::SaveFile)
-	ON_COMMAND(ID_MENU_OPEN_FILE, &CFC_ConfigerDlg::OPenFile)
+	ON_COMMAND(ID_MENU_OPEN_FILE, &CFC_ConfigerDlg::OPenFile)	
 	ON_BN_CLICKED(IDC_BUTTON_INSERT_DIDETH, &CFC_ConfigerDlg::OnBnClickedButtonInsertDideth)
 
 	ON_MESSAGE(DM_GETDEFID, OnGetDefID)
@@ -193,6 +206,8 @@ BEGIN_MESSAGE_MAP(CFC_ConfigerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_CAN_WR, &CFC_ConfigerDlg::OnBnClickedBtnCanWr)
 	ON_BN_CLICKED(IDC_BTN_WR_SWITCHID, &CFC_ConfigerDlg::OnBnClickedBtnWrSwitchid)
 	ON_BN_CLICKED(IDC_BTN_RD_SWITCHID, &CFC_ConfigerDlg::OnBnClickedBtnRdSwitchid)
+	ON_BN_CLICKED(IDC_BTN_WR_SourceID, &CFC_ConfigerDlg::OnBnClickedBtnWrSourceID)
+	ON_BN_CLICKED(IDC_BTN_RD_SourceID, &CFC_ConfigerDlg::OnBnClickedBtnRdSourceID)
 	ON_BN_CLICKED(IDC_BTN_RD_PRIORITY, &CFC_ConfigerDlg::OnBnClickedBtnRdPriority)
 	ON_BN_CLICKED(IDC_BTN_RD, &CFC_ConfigerDlg::OnBnClickedBtnRd)
 	ON_BN_CLICKED(IDC_BTN_CLR_STAT, &CFC_ConfigerDlg::OnBnClickedBtnClrStat)
@@ -204,6 +219,7 @@ BEGIN_MESSAGE_MAP(CFC_ConfigerDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_TREAD, &CFC_ConfigerDlg::OnBnClickedButtonTread)
 	ON_BN_CLICKED(IDC_BUTTON_TWRITE, &CFC_ConfigerDlg::OnBnClickedButtonTwrite)
 	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN1, &CFC_ConfigerDlg::OnDeltaposSpin1)
+	ON_NOTIFY(UDN_DELTAPOS, IDC_SPIN_BroadIPInc, &CFC_ConfigerDlg::OnBroadIPChanged)
 END_MESSAGE_MAP()
 
 
@@ -316,7 +332,7 @@ BOOL CFC_ConfigerDlg::OnInitDialog()
 
 //增加广播
 	//LVS_NOCOLUMNHEADER
-	m_UGGridCtrl_BroadCast.ModifyStyle(0,LVS_NOCOLUMNHEADER,0); 
+	//m_UGGridCtrl_BroadCast.ModifyStyle(0,LVS_NOCOLUMNHEADER,0); 
 	m_UGGridCtrl_BroadCast.GetGridLines(bGridLines, lineColor);
 	m_UGGridCtrl_BroadCast.SetGridLines(TRUE, lineColor);
 
@@ -336,9 +352,32 @@ BOOL CFC_ConfigerDlg::OnInitDialog()
 	m_UGGridCtrl_BroadCast.SetBkColor(RGB(10,154,220));
 	for(int i=0;i<3;i++)
 		m_UGGridCtrl_BroadCast.SetColumn(i, &lvc);
+
+	//增加组播IP与网络端口的映射
+	//LVS_NOCOLUMNHEADER
+	m_Grid_BroadIPPort.GetGridLines(bGridLines, lineColor);
+	m_Grid_BroadIPPort.SetGridLines(TRUE, lineColor);
+	m_Grid_BroadIPPort.InsertColumn(0, _T("序号"));
+	m_Grid_BroadIPPort.InsertColumn(1, _T(" 组播IP "));
+	m_Grid_BroadIPPort.InsertColumn(2, _T("网络端口"));	
+
+	m_Grid_BroadIPPort.SetColumnWidth(0, 40);	
+	m_Grid_BroadIPPort.GetWindowRect(&myrect);
+	m_Grid_BroadIPPort.SetColumnWidth(1, (myrect.Width() - 120));
+	m_Grid_BroadIPPort.SetColumnWidth(2, 70);	
+	m_Grid_BroadIPPort.SetEditable(TRUE, 1);
+	m_Grid_BroadIPPort.SetEditable(TRUE, 2);
+	m_Grid_BroadIPPort.SetEditable(FALSE, 0);
+	m_Grid_BroadIPPort.ShowWindow(SW_SHOW);
+	m_Grid_BroadIPPort.SetTextBkColor(RGB(10, 154, 220));
+	m_Grid_BroadIPPort.SetBkColor(RGB(10, 154, 220));
+	for (int i = 0; i<3; i++)
+		m_Grid_BroadIPPort.SetColumn(i, &lvc);
 //end 新增广播
+	m_UGGridDID_Eth.GetGridLines(bGridLines, lineColor);
+	m_UGGridDID_Eth.SetGridLines(TRUE, lineColor);
 	m_UGGridDID_Eth.InsertColumn(0, _T("序号"));
-	m_UGGridDID_Eth.InsertColumn(1, _T("FC/CAN DID"));
+	m_UGGridDID_Eth.InsertColumn(1, _T("单播IP/CAN ID"));
 	m_UGGridDID_Eth.InsertColumn(2, _T("网络端口"));
 	m_UGGridDID_Eth.InsertColumn(3, _T("CAN端口"));
 	m_UGGridDID_Eth.SetColumnWidth(0,40);	
@@ -388,6 +427,7 @@ BOOL CFC_ConfigerDlg::OnInitDialog()
 	UpdateStatistics();
 	m_strlSpinIPMAP.SetRange(0,255);
 	m_strlSpinDIDMAP.SetRange(0,255);
+	m_Spin_BroadIPPort.SetRange(0, 255);
 
 	for(int i=0;i<4;i++)
 		m_SpinEth[i].SetRange(0,255);
@@ -483,7 +523,8 @@ void CFC_ConfigerDlg::OnPaint()
 		//广播
 		m_UGGridCtrl_BroadCast.ShowScrollBar(SB_HORZ, FALSE);	
 		//
-		m_UGGridDID_Eth.ShowScrollBar(SB_HORZ, FALSE);		
+		m_UGGridDID_Eth.ShowScrollBar(SB_HORZ, FALSE);	
+		m_Grid_BroadIPPort.ShowScrollBar(SB_HORZ, FALSE);
 		CDialogEx::OnPaint();
 	}
 }
@@ -569,7 +610,6 @@ BOOL CFC_ConfigerDlg::SendDataFrame(void)
 	m_nRcvTimer = 0;
 	return TRUE;
 }
-
 
 void CFC_ConfigerDlg::OnTimer(UINT nTimerID)
 {	
@@ -775,7 +815,46 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 				UpdateData(false);
 			}
 		}
-		else if(add==0x3ff)
+		//receive m_Map_BroadIPPort
+		else if (add == 0x49f)
+		{
+			int address = 0x400;
+			m_Map_BroadIPPort.RemoveAll();
+			while (true)
+			{
+				DWORD ipValue = 0;
+				for (size_t j = 0; j < 4; j++)
+				{
+					UINT partValue = Card_Flash_Table[address];					
+					ipValue += ((partValue & 0xff) << (3 - j)*8);
+					address++;
+				}
+				if (ipValue == 0 || address > 0x49f)
+				{
+					break;
+				}
+				int portValue = Card_Flash_Table[address];				
+				address++;
+				m_Map_BroadIPPort.Add(CPoint(ipValue, portValue & 0xff));
+			}
+			ShowBroadIP_Port_Map();
+			UpdateData(false);
+		}
+		else if (add == 0x229)
+		{
+			//SourceID
+			int address = 0x227;
+			int sourceId = 0;
+			for (int i = 0; i < 3; i++)
+			{				
+				sourceId += (Card_Flash_Table[address] & 0xff) << (2 - i)*8;
+				address++;
+			}
+			m_SourceID = sourceId;
+			m_SourceIDStr.Format(_T("0x%x"), m_SourceID);
+			UpdateData(false);
+		}
+		else if(add == 0x3ff)
 		{
 			//配置表读取完成
 			FC_IP_DID_Map_UniCast.RemoveAll();
@@ -792,13 +871,28 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 					FC_IP_DID_Map_BroadCast.Add(CPoint(i,Card_Flash_Table[i+0x300]&0xff));
 			}
 
+			//光口到网口
 			FC_DID_ETH_Map.RemoveAll();
-			for(int i=0;i<256;i++)
+			for (int i = 0; i < 256; i++)
 			{
-				if((Card_Flash_Table[i+256]&0xff)>0)
-					FC_DID_ETH_Map.Add(CPoint(i,Card_Flash_Table[i+256]&0xff));
+				if ((Card_Flash_Table[i + 0x100] & 0xff)>0)
+					FC_DID_ETH_Map.Add(CPoint(i, Card_Flash_Table[i + 0x100] & 0xff));
 			}
-		}
+			int count=FC_DID_ETH_Map.GetCount();
+			CString baseIPStr = m_strIP_HighPart_Uni + ".0";
+			int baseIP = htonl(inet_addr(baseIPStr));
+			for (int i = 0; i < count; i++)
+			{
+				CPoint point=FC_DID_ETH_Map.GetAt(i);
+				int highPort = point.y & 0xf0;
+				if (highPort == 0)
+				{
+					point.x = baseIP + point.x;
+					FC_DID_ETH_Map.RemoveAt(i);
+					FC_DID_ETH_Map.InsertAt(i, point);
+				}				
+			}			
+		}		
 		else if(add==0x21f)
 		{
 			//CAN的端口ID和发送DID
@@ -1052,6 +1146,13 @@ LRESULT CFC_ConfigerDlg::OnMessageDeal(WPARAM data, LPARAM len)
 		OnBnClickedButtonDelDid();
 	else if ((CFCGrid*)data==&m_UGGridCtrl_BroadCast)
 		OnBnClickedButtonDelIpfc_Broad();
+	else if ((CFCGrid*)data == &m_Grid_BroadIPPort)
+	{
+		CFCGrid* pGrid = &m_Grid_BroadIPPort;
+		int nIdx = GridDeleteItems(pGrid);
+		if (nIdx >= 0)
+			UpDateGridView(pGrid, nIdx);
+	}
 	return 0;
 }
 
@@ -1067,6 +1168,9 @@ void CFC_ConfigerDlg::OnBnClickedWriteCfg()
 		return;
 	DID_Port_TableToArray();
 	if( !Verify_FC_Ethernet())
+		return;	
+	TableToArray_BroadIPPort();
+	if (!Verify_BroadIPPort())
 		return;	
 	int num =  PackageTransferTable(0);	
 	StartupCmdlistSend(num);
@@ -1164,11 +1268,13 @@ int CFC_ConfigerDlg::PackageTransferTable(int start_index)
 		cmd_temp_b.WriteData = FC_IP_DID_Map_UniCast.GetAt(i).y;	
 		cmd_item_list[index++] = cmd_temp_b;
 	}
-	for(int i=0;i<FC_DID_ETH_Map.GetCount();i++)
+	for (int i = 0; i < FC_DID_ETH_Map.GetCount(); i++)
 	{
-		cmd_temp_a.WriteData = FC_DID_ETH_Map.GetAt(i).x+0x100;
+		int x = FC_DID_ETH_Map.GetAt(i).x;
+		int y = FC_DID_ETH_Map.GetAt(i).y;
+		cmd_temp_a.WriteData = (FC_DID_ETH_Map.GetAt(i).x & 0xff) + 0x100;
 		cmd_item_list[index++] = cmd_temp_a;
-		cmd_temp_b.WriteData = FC_DID_ETH_Map.GetAt(i).y;	
+		cmd_temp_b.WriteData = FC_DID_ETH_Map.GetAt(i).y;
 		cmd_item_list[index++] = cmd_temp_b;
 	}
 	for(int i=0;i<FC_IP_DID_Map_BroadCast.GetCount();i++)
@@ -1178,6 +1284,35 @@ int CFC_ConfigerDlg::PackageTransferTable(int start_index)
 		cmd_temp_b.WriteData = FC_IP_DID_Map_BroadCast.GetAt(i).y;	
 		cmd_item_list[index++] = cmd_temp_b;
 	}
+	//m_Map_BroadIPPort
+	int address = 0x400;
+	for (int i = 0; i<m_Map_BroadIPPort.GetCount(); i++)
+	{		
+		DWORD ipValue = m_Map_BroadIPPort.GetAt(i).x;
+		DWORD portValue = m_Map_BroadIPPort.GetAt(i).y;
+		
+		for (size_t j = 0; j < 4; j++)
+		{
+			cmd_temp_a.WriteData = address;
+			cmd_item_list[index++] = cmd_temp_a;
+			cmd_temp_b.WriteData = (ipValue >> (3 - j)*8) & 0xff;
+			cmd_item_list[index++] = cmd_temp_b;
+			address++;
+		}
+		cmd_temp_a.WriteData = address;
+		cmd_item_list[index++] = cmd_temp_a;
+		cmd_temp_b.WriteData = portValue;
+		cmd_item_list[index++] = cmd_temp_b;
+		address++;
+	}
+	while (address <= 0x49f)
+	{
+		cmd_temp_a.WriteData = address++;
+		cmd_item_list[index++] = cmd_temp_a;
+		cmd_temp_b.WriteData = 0;
+		cmd_item_list[index++] = cmd_temp_b;
+	}
+
 	//以太网发送到fc的单播地址高字节
 	for(int i=0;i<3;i++)
 	{
@@ -1246,8 +1381,15 @@ void CFC_ConfigerDlg::StartupCmdlistSend(int num)
 	cmd_item_index = 0;
 	nPollCounter = 0;	
 	cmd_item_num = num;
-	for(int i=0;i<cmd_item_num;i++)
+	for (int i = 0; i < cmd_item_num; i++)
+	{
 		cmd_queue[i] = cmd_item_list[i];
+		/*if (cmd_queue[i].WriteData != 0)
+		{
+			Cmd_Item_Send(cmd_queue[i], 1);
+		}	*/	
+	}
+		
 	Cmd_Item_Send(cmd_queue[0],1);
 	m_Ctl_Prgress.SetRange(0,cmd_item_num);
 	m_Ctl_Prgress.SetPos(0);
@@ -1303,6 +1445,54 @@ int CFC_ConfigerDlg::PackageSwitchID(BOOL bReadWrite,int start_index)
 	return (index-start_index);
 }
 
+//修改SourceID
+void CFC_ConfigerDlg::OnBnClickedBtnWrSourceID()
+{
+	UpdateData(TRUE);
+	if (!Verify_SourceID())
+	{
+		return;
+	}
+	int num = PackageSourceID(PC_WRITE_CMD, 0);
+	StartupCmdlistSend(num);
+}
+
+//PackageSourceID
+int CFC_ConfigerDlg::PackageSourceID(BOOL bReadWrite, int start_index)
+{
+	PC_CMD_ITEM cmd_temp_a, cmd_temp_b;
+	int index = start_index;
+	int address = 0x227;
+	if (bReadWrite)
+	{
+		cmd_temp_a = Get_CMD_Item(PC_WRITE_CMD, Flash_cfg_addr_wr);
+		cmd_temp_b = Get_CMD_Item(PC_WRITE_CMD, Flash_cfg_data_wr);
+		int sourID = m_SourceID & 0xffffff;
+		for (int i = 0; i < 3; i++)
+		{
+			cmd_temp_a.WriteData = address;
+			cmd_item_list[index++] = cmd_temp_a;
+			cmd_temp_b.WriteData = (sourID >> ((2 - i) * 8)) & 0xff;
+			cmd_item_list[index++] = cmd_temp_b;
+			address++;
+		}
+	}
+	else
+	{
+		cmd_temp_a = Get_CMD_Item(PC_WRITE_CMD, Flash_cfg_addr_rd);
+		cmd_temp_b = Get_CMD_Item(PC_READ_CMD, Flash_cfg_data_rd);		
+		for (int i = 0; i < 3; i++)
+		{
+			cmd_temp_a.WriteData = address;
+			cmd_item_list[index++] = cmd_temp_a;
+			cmd_temp_b.pReadData = Card_Flash_Table + address;
+			cmd_item_list[index++] = cmd_temp_b;
+			address++;
+		}
+	}
+	return (index - start_index);
+}
+
 //板卡的信息
 int CFC_ConfigerDlg::PackageCardInfor(int start_index)
 {
@@ -1318,7 +1508,12 @@ void CFC_ConfigerDlg::OnBnClickedBtnRdSwitchid()
 	int num = PackageSwitchID(PC_READ_CMD,0);
 	StartupCmdlistSend(num);
 }
-
+//读取SourceID
+void CFC_ConfigerDlg::OnBnClickedBtnRdSourceID()
+{
+	int num = PackageSourceID(PC_READ_CMD, 0);
+	StartupCmdlistSend(num);
+}
 
 void CFC_ConfigerDlg::OnBnClickedBtnRdPriority()
 {
@@ -1403,6 +1598,10 @@ CString CFC_ConfigerDlg::Get_CMD_Description(PC_CMD_ITEM cmd)
 		else if(data==0x200)
 		{
 			strFlash = _T("交换机ID号");
+		}
+		else if (data == 0x227)
+		{
+			strFlash = _T("SourceID号");
 		}
 		else if(data<=0x204)
 			strFlash.Format(_T("以太网物理端口%d优先级"),data-0x200);
@@ -1508,7 +1707,7 @@ int CFC_ConfigerDlg::PackageTransferTable_RD(int start_index)
 	{
 		cmd_temp_a.WriteData = i+0x100;
 		cmd_item_list[index++] = cmd_temp_a;
-		cmd_temp_b.pReadData = Card_Flash_Table+i+256;	
+		cmd_temp_b.pReadData = Card_Flash_Table + i + 0x100;
 		cmd_item_list[index++] = cmd_temp_b;
 	}
 	for(int i=0;i<256;i++)
@@ -1518,6 +1717,34 @@ int CFC_ConfigerDlg::PackageTransferTable_RD(int start_index)
 		cmd_temp_b.pReadData = Card_Flash_Table+i+0x300;	
 		cmd_item_list[index++] = cmd_temp_b;
 	}
+	//m_Map_BroadIPPort
+	int address = 0x400;
+	for (int i = 0; i<m_Map_BroadIPPort.GetCount(); i++)
+	{
+		for (size_t j = 0; j < 4; j++)
+		{
+			cmd_temp_a.WriteData = address;
+			cmd_item_list[index++] = cmd_temp_a;
+			cmd_temp_b.pReadData = Card_Flash_Table + address;
+			cmd_item_list[index++] = cmd_temp_b;
+			address++;
+		}
+		cmd_temp_a.WriteData = address;
+		cmd_item_list[index++] = cmd_temp_a;
+		cmd_temp_b.pReadData = Card_Flash_Table + address;
+		cmd_item_list[index++] = cmd_temp_b;
+		address++;
+	}
+	while (address <= 0x49f)
+	{
+		cmd_temp_a.WriteData = address;
+		cmd_item_list[index++] = cmd_temp_a;
+		Card_Flash_Table[address] = 0;
+		cmd_temp_b.pReadData = Card_Flash_Table + address;
+		cmd_item_list[index++] = cmd_temp_b;
+		address++;
+	}	
+
 	//以太网发送到fc的单播地址高字节
 	for(int i=0;i<3;i++)
 	{
@@ -1597,7 +1824,8 @@ void CFC_ConfigerDlg::OnBnClickedOneKeyWrite()
 	//
 
 	num += PackageEthPriority(PC_WRITE_CMD,num);
-	num += PackageSwitchID(PC_WRITE_CMD,num);
+	num += PackageSwitchID(PC_WRITE_CMD,num);	
+	num += PackageSourceID(PC_WRITE_CMD, num);
 
 	IP_DID_TableToArray();
 	if( !Verify_Ethernet_FC())
@@ -1608,7 +1836,9 @@ void CFC_ConfigerDlg::OnBnClickedOneKeyWrite()
 	IP_DID_TableToArray_Broad();
 	if( !Verify_Ethernet_FC_Broad())
 		return;
-
+	TableToArray_BroadIPPort();
+	if (!Verify_BroadIPPort())
+		return;	
 	num +=  PackageTransferTable(num);	
 	StartupCmdlistSend(num);
 }
@@ -1625,6 +1855,7 @@ void CFC_ConfigerDlg::OnBnClickedBtnOnekeyRd()
 
 	num += PackageEthPriority(PC_READ_CMD,num);
 	num += PackageSwitchID(PC_READ_CMD,num);
+	num += PackageSourceID(PC_READ_CMD, num);
 	num += PackageTransferTable_RD(num);
 
 	StartupCmdlistSend(num);
@@ -1651,6 +1882,10 @@ void CFC_ConfigerDlg::EnableButtons(BOOL bEn)
 		pWnd->EnableWindow(bEn);
 	}
 	pWnd = (CWnd*)GetDlgItem(IDC_CHECK_AUTO_READ_STA);
+	pWnd->EnableWindow(bEn);
+	pWnd = (CWnd*)GetDlgItem(IDC_BTN_WR_SourceID);
+	pWnd->EnableWindow(bEn);
+	pWnd = (CWnd*)GetDlgItem(IDC_BTN_RD_SourceID);
 	pWnd->EnableWindow(bEn);
 	//禁止菜单对应项的操作
 	if(bEn)
@@ -1771,3 +2006,14 @@ void CFC_ConfigerDlg::OnDeltaposSpin1(NMHDR *pNMHDR, LRESULT *pResult)
 	UpdateData(FALSE);
 	*pResult = 0;
 }
+
+
+void CFC_ConfigerDlg::OnBroadIPChanged(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMUPDOWN pNMUpDown = reinterpret_cast<LPNMUPDOWN>(pNMHDR);
+	UpdateData(TRUE);
+	m_BroadIP += pNMUpDown->iDelta;
+	UpdateData(FALSE);
+	*pResult = 0;
+}
+

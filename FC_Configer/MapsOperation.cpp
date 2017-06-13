@@ -66,8 +66,23 @@ int CFC_ConfigerDlg::GridInsertItem(CFCGrid* pGrid)
 		//m_strIP_HighPart_Broad.Format(_T("%d.%d.%d"),((m_nIP_Input>>24)&0xff),((m_nIP_Input>>16)&0xff),((m_nIP_Input>>8)&0xff));	
 		SetGridItemText(pGrid,cursel,m_nIP_map,m_nDID_map);
 	}
+	else if (pGrid == &m_Grid_BroadIPPort)
+	{
+		SetGridItemText(pGrid, cursel, m_BroadIP, m_nEthPortSel);
+	}
 	else
-		SetGridItemText(pGrid,cursel,m_nDID_ETH,m_nEthPortSel);
+	{
+		int ethPort = m_nEthPortSel & 0x0f;
+		if (ethPort == 0)
+		{
+			SetGridItemText(pGrid, cursel, m_nDID_ETH, m_nEthPortSel);
+		}
+		else
+		{
+			SetGridItemText(pGrid, cursel, m_BroadIP, m_nEthPortSel);
+		}		
+	}
+		
 	return cursel;
 }
 int CFC_ConfigerDlg::GridDeleteItems(CFCGrid* pGrid)
@@ -125,11 +140,26 @@ int CFC_ConfigerDlg::SetGridItemText(CFCGrid* pGrid,int row_number,int x,int y)
 		//strTxt[0].Format(_T("%d.%d.%d.%d"),((m_nIP_Input>>24)&0xff),((m_nIP_Input>>16)&0xff),((m_nIP_Input>>8)&0xff),(m_nIP_Input&0xff));
 		strTxt[1].Format(_T("%d"),y);
 	}
+	else if (pGrid == &m_Grid_BroadIPPort)
+	{
+		strTxt[0].Format(_T("%d.%d.%d.%d"), ((x >> 24) & 0xff), ((x >> 16) & 0xff), ((x >> 8) & 0xff), (x & 0xff));
+		strTxt[1] = EthPortToString(y & 0x0f);
+	}
 	else
 	{
-		strTxt[0].Format(_T("%d"),x);
-		strTxt[1] = EthPortToString(y&0x0f);
-		strTxt[2] = EthPortToString((y>>4)&0x0f);
+		int ethPort = y & 0x0f;
+		int canPort = (y >> 4) & 0x0f;
+		if (ethPort != 0)
+		{
+			strTxt[0].Format(_T("%d.%d.%d.%d"), ((x >> 24) & 0xff), ((x >> 16) & 0xff), ((x >> 8) & 0xff), (x & 0xff));
+		}
+		else
+		{
+			strTxt[0].Format(_T("%d"), x);
+		}
+
+		strTxt[1] = EthPortToString(ethPort);
+		strTxt[2] = EthPortToString(canPort);
 	}
 
 
@@ -195,8 +225,15 @@ void CFC_ConfigerDlg::ShowIP_DID_Map(void)
 //光口到以太网的转发表格显示
 void CFC_ConfigerDlg::ShowID_EthPort_Map(void)
 {
-	MapDataToGridView(&m_UGGridDID_Eth);
+	MapDataToGridView(&m_UGGridDID_Eth);	
 }
+
+//光口到以太网的转发表格显示
+void CFC_ConfigerDlg::ShowBroadIP_Port_Map(void)
+{
+	MapDataToGridView(&m_Grid_BroadIPPort);
+}
+
 //转发规则数据到表格显示
 void CFC_ConfigerDlg::MapDataToGridView(CFCGrid* pGrid)
 {
@@ -213,6 +250,8 @@ void CFC_ConfigerDlg::MapDataToGridView(CFCGrid* pGrid)
 		pMap = &FC_IP_DID_Map_UniCast;
 	else if(pGrid==&m_UGGridCtrl_BroadCast)
 		pMap = &FC_IP_DID_Map_BroadCast;
+	else if (pGrid == &m_Grid_BroadIPPort)
+		pMap = &m_Map_BroadIPPort;
 	else
 		pMap = &FC_DID_ETH_Map;
 	for( int j = 0;j<pMap->GetCount();j++)
@@ -245,6 +284,7 @@ int CFC_ConfigerDlg::FindItemById(BYTE id)
 
 	return -1;
 }
+
 BYTE  CFC_ConfigerDlg::UpdateEthAndCanValue(int row, BYTE m_nEthPortSel)
 {
 	CFCGrid*pGrid = &m_UGGridDID_Eth;
@@ -327,32 +367,40 @@ void CFC_ConfigerDlg::OnBnClickedButtonInsertDideth()
 	BYTE temp = 0;
 	for (int i = 0; i < 4; i++)
 		temp += m_bEthPort[i] * (1 << i);
-	if (0 != m_nEthCan)
-		temp <<= 4;
 	if (0 == temp)
 	{
 		MessageBox(_T("请选择至少一个网口！"), _T("无效转发规则"), MB_OK | MB_ICONWARNING);
 		return;
 	}
-	m_nEthPortSel = temp;
 	int cur_sel = -1;
-	int findIndex = FindItemById(m_nDID_ETH);
-	if (findIndex == -1)
+	//添加信息到 组播端口表
+	if (m_nEthCan == 2)
 	{
+		m_nEthPortSel = temp;
+		cur_sel = GridInsertItem(&m_Grid_BroadIPPort);
+		UpDateGridView(&m_Grid_BroadIPPort, cur_sel);	
+		m_BroadIP += m_b_IP_DID_IP_AutoInc;
+		UpdateData(FALSE);
+		return;
+	}
+	//can端口
+	if (m_nEthCan == 1)
+	{
+		temp <<= 4;
+		m_nEthPortSel = temp;
 		cur_sel = GridInsertItem(&m_UGGridDID_Eth);
-		if (cur_sel < 0)
-		{
-			return;
-		}
+		UpDateGridView(&m_UGGridDID_Eth, cur_sel);
+		m_nDID_ETH += m_b_IP_DID_IP_AutoInc;
+		UpdateData(FALSE);
 	}
-	else
+	else //网口
 	{
-		cur_sel = findIndex;
-		BYTE m_nEthPortSel = UpdateEthAndCanValue(cur_sel, temp);
-	}
-	UpDateGridView(&m_UGGridDID_Eth, cur_sel);
-	m_nDID_ETH += m_b_IP_DID_IP_AutoInc;
-	UpdateData(FALSE);
+		m_nEthPortSel = temp;
+		cur_sel = GridInsertItem(&m_UGGridDID_Eth);
+		UpDateGridView(&m_UGGridDID_Eth, cur_sel);
+		m_BroadIP += m_b_IP_DID_IP_AutoInc;
+		UpdateData(FALSE);
+	}	
 }
 
 
