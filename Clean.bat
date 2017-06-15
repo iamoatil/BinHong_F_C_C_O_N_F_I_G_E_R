@@ -27,10 +27,12 @@ if exist "%%d" rd /s /q "%%d"
 )
 
 
-if exist "TestResults"  rd /s /q "TestResults"
+if exist "ipch"  rd /s /q "ipch"
 
+if exist "FC_Configer\FC_IP_DID转发表格.XML"  rd /s /q "FC_Configer\FC_IP_DID转发表格.XML"
 
 if exist "FC_Configer.sdf"  del /s /q "FC_Configer.sdf"
+
 
 cd /d FC_Configer
 for %%f in (串口收发数据*) do del /f /q /a-h "%%f"

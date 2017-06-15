@@ -51,19 +51,18 @@ BOOL CFC_ConfigerDlg::Verify_Ethernet_FC(void)
 	int count = FC_IP_DID_Map_UniCast.GetCount();
 	if(count<2)
 		return TRUE;
-	//IP地址与DID不能重复
+	//IP地址不能重复
 	for(int i=0;i<count;i++)
 	{
 		int a = FC_IP_DID_Map_UniCast.GetAt(i).x;
-		int c = FC_IP_DID_Map_UniCast.GetAt(i).y;
 		for(int j=i+1;j<count;j++)
 		{
 			int b = FC_IP_DID_Map_UniCast.GetAt(j).x;
-			int d = FC_IP_DID_Map_UniCast.GetAt(j).y;
-			if(( b==a )||( d==c ))
+			
+			if (b == a)
 			{
 				CString err;
-				err.Format(_T("第%d与第%d条的IP或DID重复!"),j+1,i+1);
+				err.Format(_T("第%d与第%d条的IP重复!"),j+1,i+1);
 				MessageBox(err,_T("以太网到光纤端口的转发表"),MB_OK|MB_ICONWARNING);
 				return FALSE;
 			}
@@ -77,19 +76,17 @@ BOOL CFC_ConfigerDlg::Verify_Ethernet_FC_Broad(void)
 	int count = FC_IP_DID_Map_BroadCast.GetCount();
 	if(count<2)
 		return TRUE;
-	//IP地址与DID不能重复
+	//IP地址不能重复
 	for(int i=0;i<count;i++)
 	{
 		int a = FC_IP_DID_Map_BroadCast.GetAt(i).x;
-		int c = FC_IP_DID_Map_BroadCast.GetAt(i).y;
 		for(int j=i+1;j<count;j++)
 		{
 			int b = FC_IP_DID_Map_BroadCast.GetAt(j).x;
-			int d = FC_IP_DID_Map_BroadCast.GetAt(j).y;
-			if(( b==a )||( d==c ))
+			if(( b==a ))
 			{
 				CString err;
-				err.Format(_T("第%d与第%d条的IP或DID重复!"),j+1,i+1);
+				err.Format(_T("第%d与第%d条的IP重复!"),j+1,i+1);
 				MessageBox(err,_T("以太网到光纤端口的转发表(广播)"),MB_OK|MB_ICONWARNING);
 				return FALSE;
 			}
@@ -754,7 +751,7 @@ BOOL CFC_ConfigerDlg::VerifyDID_CAN_IP_FC(void)
 	for(int i=0;i<4;i++)
 	{
 		int a = (int)m_nCAN_Send_DID[i];
-		for(int j=0;j<FC_IP_DID_Map_UniCast.GetCount();j++)
+		/*for(int j=0;j<FC_IP_DID_Map_UniCast.GetCount();j++)
 		{
 			int b = FC_IP_DID_Map_UniCast.GetAt(j).y;
 			if( b==a )
@@ -773,7 +770,7 @@ BOOL CFC_ConfigerDlg::VerifyDID_CAN_IP_FC(void)
 				MessageBox(err,_T("CAN端口的DID与广播以太网转发表"),MB_OK|MB_ICONWARNING);
 				return FALSE;
 			}
-		}
+		}*/
 		for(int j=0;j<FC_DID_ETH_Map.GetCount();j++)
 		{
 			int b = FC_DID_ETH_Map.GetAt(j).x;
@@ -785,6 +782,7 @@ BOOL CFC_ConfigerDlg::VerifyDID_CAN_IP_FC(void)
 			}
 		}
 	}
+
 	for(int i=0;i<FC_IP_DID_Map_UniCast.GetCount();i++)
 	{
 		int a = FC_IP_DID_Map_UniCast.GetAt(i).y;
@@ -813,7 +811,7 @@ BOOL CFC_ConfigerDlg::VerifyDID_CAN_IP_FC(void)
 			}
 		}
 	}
-	for(int i=0;i<FC_IP_DID_Map_BroadCast.GetCount();i++)
+	/*for(int i=0;i<FC_IP_DID_Map_BroadCast.GetCount();i++)
 	{
 		int a = FC_IP_DID_Map_BroadCast.GetAt(i).y;
 		for(int j=0;j<FC_IP_DID_Map_UniCast.GetCount();j++)
@@ -826,6 +824,6 @@ BOOL CFC_ConfigerDlg::VerifyDID_CAN_IP_FC(void)
 				return FALSE;
 			}
 		}
-	}
+	}*/
 	return TRUE;
 }
