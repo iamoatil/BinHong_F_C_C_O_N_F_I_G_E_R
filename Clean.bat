@@ -29,7 +29,7 @@ if exist "%%d" rd /s /q "%%d"
 
 if exist "ipch"  rd /s /q "ipch"
 
-if exist "FC_Configer\FC_IP_DID转发表格.XML"  rd /s /q "FC_Configer\FC_IP_DID转发表格.XML"
+if exist "FC_Configer\FC_IP_DID转发表格.XML"  del /f /q "FC_Configer\FC_IP_DID转发表格.XML"
 
 if exist "FC_Configer.sdf"  del /s /q "FC_Configer.sdf"
 

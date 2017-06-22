@@ -291,12 +291,19 @@ BOOL CFC_ConfigerDlg::OnInitDialog()
 		m_comport_portnr=atoi(strCOM);
 		::GetPrivateProfileString("RETRY","RD_CYCLES","", strCOM.GetBuffer(MAX_PATH), MAX_PATH,".\\FC_AE_Config.ini"); 
 		m_nWaitCycles=atoi(strCOM);
-		if((m_nWaitCycles<1)||(m_nWaitCycles>10000))
+		if ((m_nWaitCycles < 1) || (m_nWaitCycles>10000))
+		{
 			m_nWaitCycles = 50;
+			MessageBox(_T("超出范围[1,10000]"), _T("RD_CYCLES值超出范围"), MB_ICONSTOP);
+		}
+			
 		::GetPrivateProfileString("TIME","GAP","", strCOM.GetBuffer(MAX_PATH), MAX_PATH,".\\FC_AE_Config.ini"); 
 		m_nTimeGap=atoi(strCOM);
-		if(m_nTimeGap>1000)
+		if (m_nTimeGap < 1 || m_nTimeGap > 1000)
+		{
 			m_nTimeGap = 10;
+			MessageBox(_T("超出范围[1,1000]"), _T("GAP值超出范围"), MB_ICONSTOP);
+		}			
 
 		strCOM.ReleaseBuffer();
 	}
@@ -915,6 +922,7 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 				Uni_IP_H[i] = Card_Flash_Table[i+0x220]&0xff;
 				Broad_IP_H[i] = Card_Flash_Table[i+0x223]&0xff;
 			}
+
 			m_strIP_HighPart_Uni.Format(_T("%d.%d.%d"),Uni_IP_H[0],Uni_IP_H[1],Uni_IP_H[2]);
 			m_strIP_HighPart_Broad.Format(_T("%d.%d.%d"),Broad_IP_H[0],Broad_IP_H[1],Broad_IP_H[2]);
 			ShowIP_DID_Map();
@@ -1710,6 +1718,23 @@ int CFC_ConfigerDlg::PackageTransferTable_RD(int start_index)
 		cmd_temp_b.pReadData = Card_Flash_Table + i + 0x100;
 		cmd_item_list[index++] = cmd_temp_b;
 	}
+	//以太网发送到fc的单播地址高字节
+	for (int i = 0; i<3; i++)
+	{
+		cmd_temp_a.WriteData = 0x220 + i;
+		cmd_item_list[index++] = cmd_temp_a;
+		cmd_temp_b.pReadData = Card_Flash_Table + 0x220 + i;
+		cmd_item_list[index++] = cmd_temp_b;
+	}
+	//以太网发送到fc的组播地址高字节
+	for (int i = 0; i<3; i++)
+	{
+		cmd_temp_a.WriteData = 0x223 + i;
+		cmd_item_list[index++] = cmd_temp_a;
+		cmd_temp_b.pReadData = Card_Flash_Table + 0x223 + i;
+		cmd_item_list[index++] = cmd_temp_b;
+	}
+
 	for(int i=0;i<256;i++)
 	{
 		cmd_temp_a.WriteData = i+0x300;
@@ -1743,24 +1768,7 @@ int CFC_ConfigerDlg::PackageTransferTable_RD(int start_index)
 		cmd_temp_b.pReadData = Card_Flash_Table + address;
 		cmd_item_list[index++] = cmd_temp_b;
 		address++;
-	}	
-
-	//以太网发送到fc的单播地址高字节
-	for(int i=0;i<3;i++)
-	{
-		cmd_temp_a.WriteData = 0x220+i;
-		cmd_item_list[index++] = cmd_temp_a;
-		cmd_temp_b.pReadData = Card_Flash_Table+0x220+i;
-		cmd_item_list[index++] = cmd_temp_b;
-	}
-	//以太网发送到fc的组播地址高字节
-	for(int i=0;i<3;i++)
-	{
-		cmd_temp_a.WriteData = 0x223+i;
-		cmd_item_list[index++] = cmd_temp_a;
-		cmd_temp_b.pReadData = Card_Flash_Table+0x223+i;
-		cmd_item_list[index++] = cmd_temp_b;
-	}
+	}		
 	return (index-start_index);
 }
 
@@ -1988,7 +1996,7 @@ int CFC_ConfigerDlg::PackageFlashTest(BOOL bReadWrite)
 }
 
 void CFC_ConfigerDlg::OnBnClickedButtonTwrite()
-{
+{	
 	UpdateData(TRUE);
 	bFlashTest = TRUE;
 	m_nTestFlashAdd = _tcstol(m_strTestFlashAdd, NULL, 16);

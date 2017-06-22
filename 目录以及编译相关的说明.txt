@@ -1,0 +1,16 @@
+	目录以及编译相关的说明
+
+1，".git"文件夹是git生成的源代码控制库，若需要以前的软件版本可以安装git，用git获取以前的源代码。
+
+2，建议安装git，后面的所有更改都用git来做源代码管理。
+
+3，"Clean.bat"是一个清理编译产生的中间文件和可执行文件的脚本，主要用于迁入代码前清理非源代码的文件。
+
+4，本程序的项目文件是在windows7-64系统下用Vs2013生成管理的，平台工具集设置为“Visual Studio 2013 - Windows XP (v120_xp)”。所以，使用其他版本vs时，
+请注意，需要修改项目属性的工具集为相应的版本.(路径：“FC_Configer\FC_Configer.vcxproj”，或在vs中修改)
+
+5，若使用非vs2013版本，双击可能打不开“FC_Configer.sln”文件。此时，请直接打开“FC_Configer”目录下的工程文件“FC_Configer.vcxproj”，然后生成恰当
+解决方案文件‘.sln’
+
+6，本程序只能使用多字节字符，不能使用unicode字符集。若因为字符集编译出错，请百度下载相应的附加库。
+error MSB8031: Building an MFC project for a non-Unicode character set is deprecated. You must change the project property to Unicode or download an additional library. See http://go.microsoft.com/fwlink/p/?LinkId=286820 for more information.
