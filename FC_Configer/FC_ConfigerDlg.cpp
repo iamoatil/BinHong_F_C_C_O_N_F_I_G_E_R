@@ -836,7 +836,7 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 					ipValue += ((partValue & 0xff) << (3 - j)*8);
 					address++;
 				}
-				if (ipValue == 0xFFFFFFFF || address > 0x49f)
+				if (ipValue == 0 || address > 0x49f)
 				{
 					break;
 				}
@@ -874,7 +874,7 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 			FC_IP_DID_Map_BroadCast.RemoveAll();
 			for(int i=0;i<256;i++)
 			{
-				if ((Card_Flash_Table[i + 0x300] & 0xff) != 0xff)
+				if ((Card_Flash_Table[i + 0x300] & 0xff) > 0)
 					FC_IP_DID_Map_BroadCast.Add(CPoint(i,Card_Flash_Table[i+0x300]&0xff));
 			}
 
@@ -882,7 +882,7 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 			FC_DID_ETH_Map.RemoveAll();
 			for (int i = 0; i < 256; i++)
 			{
-				if ((Card_Flash_Table[i + 0x100] & 0xff) != 0xff)
+				if ((Card_Flash_Table[i + 0x100] & 0xff) > 0)
 					FC_DID_ETH_Map.Add(CPoint(i, Card_Flash_Table[i + 0x100] & 0xff));
 			}
 			int count=FC_DID_ETH_Map.GetCount();
