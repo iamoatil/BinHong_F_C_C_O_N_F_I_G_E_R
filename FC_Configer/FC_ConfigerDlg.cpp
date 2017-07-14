@@ -874,7 +874,7 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 			FC_IP_DID_Map_BroadCast.RemoveAll();
 			for(int i=0;i<256;i++)
 			{
-				if ((Card_Flash_Table[i + 0x300] & 0xff) > 0)
+				if ((Card_Flash_Table[i + 0x300] & 0xff) != 0xff)
 					FC_IP_DID_Map_BroadCast.Add(CPoint(i,Card_Flash_Table[i+0x300]&0xff));
 			}
 
