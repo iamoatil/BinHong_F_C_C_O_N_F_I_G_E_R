@@ -898,7 +898,11 @@ int CFC_ConfigerDlg::ProcessRcv(UINT rcvdata)
 					FC_DID_ETH_Map.RemoveAt(i);
 					FC_DID_ETH_Map.InsertAt(i, point);
 				}				
-			}			
+			}
+
+			ShowIP_DID_Map();
+			ShowID_EthPort_Map();
+			UpdateData(false);
 		}		
 		else if(add==0x21f)
 		{
